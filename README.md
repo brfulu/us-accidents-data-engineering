@@ -20,7 +20,7 @@ pip install -r requirements.txt  # install requirements
 sudo apt-get install p7zip-full
 
 # decompress data files
-7z x -o./dataset/ ./dataset/data.7z
+7z x ./dataset/data.7z
 ```
 
 ### Split files into multiple smaller files
