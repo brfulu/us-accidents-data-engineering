@@ -12,3 +12,9 @@ __pycache__/
 # Jupyter notebooks
 .ipynb_checkpoints
 */.ipynb_checkpoints/*
+
+# Extracted data
+dataset/*
+data/*
+
+!dataset/data.7z
