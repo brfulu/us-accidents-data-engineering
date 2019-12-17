@@ -29,6 +29,38 @@ def process_airpot_data(spark, input_data, output_data):
     airport_table.write.parquet(os.path.join(output_data, 'airports'), 'overwrite')
 
 
+def process_city_data(spark, input_data, output_data):
+    # get filepath to city data file
+    city_data = os.path.join(input_data, 'city_data/*.csv')
+    print(city_data)
+
+    # read airport data files
+    df = spark.read.csv(city_data, header=True, sep=';')
+
+    # extract columns to create songs table
+    city_table = df.select(
+        F.col('City').alias('city'),
+        F.col('State').alias('state'),
+        F.col('Total Population').alias('total_population')
+    )
+
+    city_table.write.parquet(os.path.join(output_data, 'cities'), 'overwrite')
+
+
+def process_accident_data(spark, input_data, output_data):
+    # get filepath to accident data file
+    accident_data = os.path.join(input_data, 'accident_data/*.csv')
+    print(accident_data)
+
+    # read accident data files
+    df = spark.read.csv(accident_data, header=True)
+
+    # extract columns to create accidents table
+    accident_table = df['type', 'name', 'continent']
+
+    accident_table.write.parquet(os.path.join(output_data, 'accidents'), 'overwrite')
+
+
 def main():
     if len(sys.argv) == 3:
         # aws cluster mode
@@ -48,6 +80,7 @@ def main():
     spark = create_spark_session()
 
     process_airpot_data(spark, input_data, output_data)
+    process_city_data(spark, input_data, output_data)
 
 
 if __name__ == "__main__":

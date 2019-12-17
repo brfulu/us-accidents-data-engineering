@@ -50,6 +50,14 @@ SPARK_TEST_STEPS = [
             'Args': ['spark-submit', '/home/hadoop/script/etl.py', 's3a://' + raw_datalake_bucket_name,
                      's3a://' + accidents_datalake_bucket_name]
         }
+    },
+    {
+        'Name': 'Setup2 - copy files',
+        'ActionOnFailure': 'CANCEL_AND_WAIT',
+        'HadoopJarStep': {
+            'Jar': 'command-runner.jar',
+            'Args': ['aws', 's3', 'cp', 's3://' + spark_script_bucket_name, '/home/hadoop/', '--recursive']
+        }
     }
 ]
 
