@@ -25,7 +25,7 @@ default_args = {
     'email_on_retry': False
 }
 
-SPARK_TEST_STEPS = [
+SPARK_ETL_STEPS = [
     {
         'Name': 'Setup Debugging',
         'ActionOnFailure': 'TERMINATE_CLUSTER',
@@ -47,16 +47,26 @@ SPARK_TEST_STEPS = [
         'ActionOnFailure': 'CONTINUE',
         'HadoopJarStep': {
             'Jar': 'command-runner.jar',
-            'Args': ['spark-submit', '/home/hadoop/script/etl.py', 's3a://' + raw_datalake_bucket_name,
+            'Args': ['spark-submit', '/home/hadoop/script/airport_etl.py', 's3a://' + raw_datalake_bucket_name,
                      's3a://' + accidents_datalake_bucket_name]
         }
     },
     {
-        'Name': 'Setup - copy files',
-        'ActionOnFailure': 'CANCEL_AND_WAIT',
+        'Name': 'Run Spark',
+        'ActionOnFailure': 'CONTINUE',
         'HadoopJarStep': {
             'Jar': 'command-runner.jar',
-            'Args': ['aws', 's3', 'cp', 's3://' + spark_script_bucket_name, '/home/hadoop/', '--recursive']
+            'Args': ['spark-submit', '/home/hadoop/script/city_etl.py', 's3a://' + raw_datalake_bucket_name,
+                     's3a://' + accidents_datalake_bucket_name]
+        }
+    },
+    {
+        'Name': 'Run Spark',
+        'ActionOnFailure': 'CONTINUE',
+        'HadoopJarStep': {
+            'Jar': 'command-runner.jar',
+            'Args': ['spark-submit', '/home/hadoop/script/accident_etl.py', 's3a://' + raw_datalake_bucket_name,
+                     's3a://' + accidents_datalake_bucket_name]
         }
     }
 ]
@@ -80,8 +90,8 @@ create_code_bucket = CreateS3BucketOperator(
     dag=dag
 )
 
-upload_etl_script = UploadFilesToS3Operator(
-    task_id='Upload_etl_script',
+upload_etl_code = UploadFilesToS3Operator(
+    task_id='Upload_etl_code',
     bucket_name=spark_script_bucket_name,
     path='/opt/bitnami/script/',
     dag=dag
@@ -101,25 +111,41 @@ create_cluster = EmrCreateJobFlowOperator(
     dag=dag
 )
 
-add_steps = EmrAddStepsOperator(
+add_jobflow_steps = EmrAddStepsOperator(
     task_id='Add_jobflow_steps',
-    job_flow_id="{{ task_instance.xcom_pull(task_ids='create_job_flow', key='return_value') }}",
+    job_flow_id="{{ task_instance.xcom_pull(task_ids='Create_EMR_cluster', key='return_value') }}",
     aws_conn_id='aws_credentials',
-    steps=SPARK_TEST_STEPS,
+    steps=SPARK_ETL_STEPS,
     dag=dag
 )
 
-check_steps = EmrStepSensor(
-    task_id='Watch_jobflow_steps',
-    job_flow_id="{{ task_instance.xcom_pull('create_job_flow', key='return_value') }}",
-    step_id="{{ task_instance.xcom_pull(task_ids='add_steps', key='return_value')[2] }}",
+check_city_processing = EmrStepSensor(
+    task_id='Watch_city_processing_step',
+    job_flow_id="{{ task_instance.xcom_pull('Create_EMR_cluster', key='return_value') }}",
+    step_id="{{ task_instance.xcom_pull(task_ids='Add_jobflow_steps', key='return_value')[2] }}",
+    aws_conn_id='aws_credentials',
+    dag=dag
+)
+
+check_airport_processing = EmrStepSensor(
+    task_id='Watch_airport_processing_step',
+    job_flow_id="{{ task_instance.xcom_pull('Create_EMR_cluster', key='return_value') }}",
+    step_id="{{ task_instance.xcom_pull(task_ids='Add_jobflow_steps', key='return_value')[3] }}",
+    aws_conn_id='aws_credentials',
+    dag=dag
+)
+
+check_accident_processing = EmrStepSensor(
+    task_id='Watch_accident_processing_step',
+    job_flow_id="{{ task_instance.xcom_pull('Create_EMR_cluster', key='return_value') }}",
+    step_id="{{ task_instance.xcom_pull(task_ids='Add_jobflow_steps', key='return_value')[4] }}",
     aws_conn_id='aws_credentials',
     dag=dag
 )
 
 delete_cluster = EmrTerminateJobFlowOperator(
     task_id='Delete_EMR_cluster',
-    job_flow_id="{{ task_instance.xcom_pull(task_ids='create_job_flow', key='return_value') }}",
+    job_flow_id="{{ task_instance.xcom_pull(task_ids='Create_EMR_cluster', key='return_value') }}",
     aws_conn_id='aws_credentials',
     dag=dag
 )
@@ -127,5 +153,9 @@ delete_cluster = EmrTerminateJobFlowOperator(
 end_operator = DummyOperator(task_id='Stop_execution', dag=dag)
 
 start_operator >> create_datalake_bucket >> create_cluster
-start_operator >> create_code_bucket >> upload_etl_script >> create_cluster
-create_cluster >> add_steps >> check_steps >> delete_cluster >> end_operator
+start_operator >> create_code_bucket >> upload_etl_code >> create_cluster
+create_cluster >> add_jobflow_steps
+add_jobflow_steps >> check_city_processing >> delete_cluster
+add_jobflow_steps >> check_airport_processing >> delete_cluster
+add_jobflow_steps >> check_accident_processing >> delete_cluster
+delete_cluster >> end_operator
