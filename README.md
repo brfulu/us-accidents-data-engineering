@@ -7,6 +7,34 @@
 
 ## Getting started
 
+#### Datalake schema
+Fact table
+1. accidents
+- accident_id: This is a unique identifier of the accident record.
+- severity: Shows the severity of the accident, a number between 1 and 4
+- distance: The length of the road extent affected by the accident.
+- description: Shows natural language description of the accident.
+- airport_code
+- city_id
+- temperature: Shows the temperature (in Fahrenheit).
+
+Dimension tables
+1. cities
+- city_id
+- city
+- state_code
+- total_population
+
+2. airports
+- airport_code
+- type
+- name
+- iso_country (state_code)
+- iso_region
+- municipality
+
+
+
 #### Create python virtual environment
 ```
 python3 -m venv venv             # create virtualenv
