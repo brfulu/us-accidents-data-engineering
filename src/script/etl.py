@@ -131,8 +131,8 @@ def main():
 
     spark = create_spark_session()
 
-    # process_airpot_data(spark, input_data, output_data)
-    # process_city_data(spark, input_data, output_data)
+    process_airpot_data(spark, input_data, output_data)
+    process_city_data(spark, input_data, output_data)
     process_accident_data(spark, input_data, output_data)
 
 

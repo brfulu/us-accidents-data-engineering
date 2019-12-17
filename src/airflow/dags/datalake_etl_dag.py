@@ -80,8 +80,8 @@ create_code_bucket = CreateS3BucketOperator(
     dag=dag
 )
 
-upload_code = UploadFilesToS3Operator(
-    task_id='Upload_code',
+upload_etl_script = UploadFilesToS3Operator(
+    task_id='Upload_etl_script',
     bucket_name=spark_script_bucket_name,
     path='/opt/bitnami/script/',
     dag=dag
@@ -93,32 +93,32 @@ create_datalake_bucket = CreateS3BucketOperator(
     dag=dag
 )
 
-cluster_creator = EmrCreateJobFlowOperator(
-    task_id='create_job_flow',
+create_cluster = EmrCreateJobFlowOperator(
+    task_id='Create_EMR_cluster',
     job_flow_overrides=JOB_FLOW_OVERRIDES,
     aws_conn_id='aws_credentials',
     emr_conn_id='emr_default',
     dag=dag
 )
 
-step_adder = EmrAddStepsOperator(
-    task_id='add_steps',
+add_steps = EmrAddStepsOperator(
+    task_id='Add_jobflow_steps',
     job_flow_id="{{ task_instance.xcom_pull(task_ids='create_job_flow', key='return_value') }}",
     aws_conn_id='aws_credentials',
     steps=SPARK_TEST_STEPS,
     dag=dag
 )
 
-step_checker = EmrStepSensor(
-    task_id='watch_step',
+check_steps = EmrStepSensor(
+    task_id='Watch_jobflow_steps',
     job_flow_id="{{ task_instance.xcom_pull('create_job_flow', key='return_value') }}",
     step_id="{{ task_instance.xcom_pull(task_ids='add_steps', key='return_value')[2] }}",
     aws_conn_id='aws_credentials',
     dag=dag
 )
 
-cluster_remover = EmrTerminateJobFlowOperator(
-    task_id='remove_cluster',
+delete_cluster = EmrTerminateJobFlowOperator(
+    task_id='Delete_EMR_cluster',
     job_flow_id="{{ task_instance.xcom_pull(task_ids='create_job_flow', key='return_value') }}",
     aws_conn_id='aws_credentials',
     dag=dag
@@ -126,6 +126,6 @@ cluster_remover = EmrTerminateJobFlowOperator(
 
 end_operator = DummyOperator(task_id='Stop_execution', dag=dag)
 
-start_operator >> create_datalake_bucket >> cluster_creator
-start_operator >> create_code_bucket >> upload_code >> cluster_creator
-cluster_creator >> step_adder >> step_checker >> cluster_remover >> end_operator
+start_operator >> create_datalake_bucket >> create_cluster
+start_operator >> create_code_bucket >> upload_etl_script >> create_cluster
+create_cluster >> add_steps >> check_steps >> delete_cluster >> end_operator
