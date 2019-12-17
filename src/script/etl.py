@@ -21,6 +21,8 @@ def process_airpot_data(spark, input_data, output_data):
 
     # read airport data files
     df = spark.read.csv(airport_data, header=True)
+    df = df.filter(df.continent == 'NA')
+    print('airport_coint = ', df.count())
 
     # extract columns to create songs table
     airport_table = df.select(
@@ -40,10 +42,11 @@ def process_airpot_data(spark, input_data, output_data):
 def process_city_data(spark, input_data, output_data):
     # get filepath to city data file
     city_data = os.path.join(input_data, 'city_data/*.csv')
-    print(city_data)
 
-    # read airport data files
+    # read city data files
     df = spark.read.csv(city_data, header=True, sep=';')
+    df = df.drop_duplicates(subset=['City', 'State'])
+    print('city_count = ', df.count())
 
     # extract columns to create city table
     city_table = df.select(
@@ -69,21 +72,31 @@ def process_accident_data(spark, input_data, output_data):
     df = df['ID', 'Start_Time', 'City', 'State', 'Airport_Code', 'End_Time', 'Timezone', 'Description', 'Severity',
             'Temperature(F)']
 
-    # read in song data to use for songplays table
+    print('accident_count = ', df.count())
+
+    # read in song data to use for city table
     city_df = spark.read.parquet(os.path.join(output_data, 'cities/state=*/*.parquet'))
-    print(city_df.count())
+    print('city_count = ', city_df.count())
 
-    city_accident_df = df.join(city_df, df.State == city_df.state_code)
+    # read in song data to use for airport table
+    airport_df = spark.read.parquet(os.path.join(output_data, 'airports/state=*/*.parquet'))
+    print('airport_count = ', airport_df.count())
 
-    print(city_accident_df.count())
+    joined_df = df.join(city_df, (df.City == city_df.city_name) & (df.State == city_df.state_code), how='left')
+    print('joined1_count = ', joined_df.count())
+    joined_df = joined_df.join(airport_df, 'airport_code', how='left')
+    print('joined2_count = ', joined_df.count())
+    # joined_df.show(5)
 
-    city_accident_df.show(5)
-    print('poceo')
+    joined_df = joined_df.withColumn('datetime', F.to_date(F.col('Start_Time')))
 
     # extract columns to create accidents table
-    accident_table = city_accident_df.select(
+    accident_table = joined_df.select(
         F.col('ID').alias('accident_id'),
-        F.col('Start_Time').alias('datetime'),
+        F.year('datetime').alias('year'),
+        F.month('datetime').alias('month'),
+        # F.dayofmonth('datetime').alias('day'),
+        'datetime',
         F.col('City').alias('city'),
         F.col('State').alias('state_code'),
         F.col('State').alias('state'),
@@ -91,13 +104,13 @@ def process_accident_data(spark, input_data, output_data):
         F.col('Start_Time').alias('start_time'),
         F.col('End_Time').alias('end_time'),
         F.col('Timezone').alias('timezone'),
-        F.col('Description').alias('description'),
+        # F.col('Description').alias('description'),
         F.col('Severity').alias('severity'),
         F.col('Temperature(F)').alias('temperature')
     )
 
-    accident_table.write.partitionBy(['datetime', 'state']).parquet(os.path.join(output_data, 'accidents'), 'overwrite')
-    print('zavrsio')
+    # accident_table.show(5)
+    accident_table.write.partitionBy(['year', 'month']).parquet(os.path.join(output_data, 'accidents'), 'overwrite')
 
 
 def main():
@@ -118,8 +131,8 @@ def main():
 
     spark = create_spark_session()
 
-    process_airpot_data(spark, input_data, output_data)
-    process_city_data(spark, input_data, output_data)
+    # process_airpot_data(spark, input_data, output_data)
+    # process_city_data(spark, input_data, output_data)
     process_accident_data(spark, input_data, output_data)
 
 

@@ -44,11 +44,19 @@ SPARK_TEST_STEPS = [
     },
     {
         'Name': 'Run Spark',
-        'ActionOnFailure': 'CANCEL_AND_WAIT',
+        'ActionOnFailure': 'CONTINUE',
         'HadoopJarStep': {
             'Jar': 'command-runner.jar',
             'Args': ['spark-submit', '/home/hadoop/script/etl.py', 's3a://' + raw_datalake_bucket_name,
                      's3a://' + accidents_datalake_bucket_name]
+        }
+    },
+    {
+        'Name': 'Setup - copy files',
+        'ActionOnFailure': 'CANCEL_AND_WAIT',
+        'HadoopJarStep': {
+            'Jar': 'command-runner.jar',
+            'Args': ['aws', 's3', 'cp', 's3://' + spark_script_bucket_name, '/home/hadoop/', '--recursive']
         }
     }
 ]
@@ -104,7 +112,7 @@ step_adder = EmrAddStepsOperator(
 step_checker = EmrStepSensor(
     task_id='watch_step',
     job_flow_id="{{ task_instance.xcom_pull('create_job_flow', key='return_value') }}",
-    step_id="{{ task_instance.xcom_pull(task_ids='add_steps', key='return_value')[0] }}",
+    step_id="{{ task_instance.xcom_pull(task_ids='add_steps', key='return_value')[2] }}",
     aws_conn_id='aws_credentials',
     dag=dag
 )

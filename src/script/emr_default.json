@@ -1,6 +1,6 @@
 {
   "Name": "spark-emr-cluster",
-  "LogUri": "s3://aws-logs-086546006979-us-west-2",
+  "LogUri": "s3://aws-logs-086546006979-eu-west-1",
   "ReleaseLabel": "emr-5.28.0",
   "Applications": [
     {
@@ -34,7 +34,7 @@
         "Market": "ON_DEMAND",
         "InstanceRole": "CORE",
         "InstanceType": "m5.xlarge",
-        "InstanceCount": 4
+        "InstanceCount": 3
       }
     ],
     "KeepJobFlowAliveWhenNoSteps": false,
