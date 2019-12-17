@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 import os
+import configparser
 from airflow import DAG
 from airflow.contrib.hooks.aws_hook import AwsHook
 from airflow.operators.dummy_operator import DummyOperator
@@ -7,7 +8,10 @@ from airflow.operators.bash_operator import BashOperator
 from airflow.operators.postgres_operator import PostgresOperator
 from operators import CreateS3BucketOperator, UploadFilesToS3Operator
 
-raw_datalake_bucket_name = 'fulu-raw-datalake-123'
+# config = configparser.ConfigParser()
+# config.read('../dl.cfg')
+
+raw_datalake_bucket_name = 'fulu-raw-datalake'
 
 default_args = {
     'owner': 'brfulu',

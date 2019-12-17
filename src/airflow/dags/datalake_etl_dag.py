@@ -1,19 +1,26 @@
 import airflow
+import configparser
 from airflow import DAG
 from datetime import datetime, timedelta
+from airflow.operators.dummy_operator import DummyOperator
 from airflow.contrib.operators.emr_add_steps_operator import EmrAddStepsOperator
 from airflow.contrib.operators.emr_create_job_flow_operator import EmrCreateJobFlowOperator
 from airflow.contrib.operators.emr_terminate_job_flow_operator import EmrTerminateJobFlowOperator
 from airflow.contrib.sensors.emr_step_sensor import EmrStepSensor
+from operators import CreateS3BucketOperator, UploadFilesToS3Operator
 
-raw_datalake_bucket_name = 'fulu-raw-datalake-123'
+# config = configparser.ConfigParser()
+# config.read('../dl.cfg')
+
+spark_script_bucket_name = 'fulu-spark-script'
+raw_datalake_bucket_name = 'fulu-raw-datalake'
 accidents_datalake_bucket_name = 'fulu-accidents-datalake'
 
 default_args = {
     'owner': 'brfulu',
     'start_date': datetime(2019, 1, 12),
     'depends_on_past': False,
-    'retries': 1,
+    'retries': 0,
     'retry_delay': 300,
     'email_on_retry': False
 }
@@ -32,7 +39,7 @@ SPARK_TEST_STEPS = [
         'ActionOnFailure': 'CANCEL_AND_WAIT',
         'HadoopJarStep': {
             'Jar': 'command-runner.jar',
-            'Args': ['aws', 's3', 'cp', 's3://my-bucket', '/home/hadoop/', '--recursive']
+            'Args': ['aws', 's3', 'cp', 's3://' + spark_script_bucket_name, '/home/hadoop/', '--recursive']
         }
     },
     {
@@ -40,7 +47,8 @@ SPARK_TEST_STEPS = [
         'ActionOnFailure': 'CANCEL_AND_WAIT',
         'HadoopJarStep': {
             'Jar': 'command-runner.jar',
-            'Args': ['spark-submit', '/home/hadoop/etl.py', 'input_data', 'output_data']
+            'Args': ['spark-submit', '/home/hadoop/script/etl.py', 's3a://' + raw_datalake_bucket_name,
+                     's3a://' + accidents_datalake_bucket_name]
         }
     }
 ]
@@ -52,16 +60,36 @@ JOB_FLOW_OVERRIDES = {
 dag = DAG('accidents_datalake_etl_dag',
           default_args=default_args,
           description='Extract transform and load data to S3 datalake.',
-          schedule_interval='@hourly',
+          schedule_interval='@yearly',
           catchup=False
           )
+
+start_operator = DummyOperator(task_id='Begin_execution', dag=dag)
+
+create_code_bucket = CreateS3BucketOperator(
+    task_id='Create_code_bucket',
+    bucket_name=spark_script_bucket_name,
+    dag=dag
+)
+
+upload_code = UploadFilesToS3Operator(
+    task_id='Upload_code',
+    bucket_name=spark_script_bucket_name,
+    path='/opt/bitnami/script/',
+    dag=dag
+)
+
+create_datalake_bucket = CreateS3BucketOperator(
+    task_id='Create_datalake_bucket',
+    bucket_name=accidents_datalake_bucket_name,
+    dag=dag
+)
 
 cluster_creator = EmrCreateJobFlowOperator(
     task_id='create_job_flow',
     job_flow_overrides=JOB_FLOW_OVERRIDES,
     aws_conn_id='aws_credentials',
     emr_conn_id='emr_default',
-    region_name='eu-west-1',
     dag=dag
 )
 
@@ -88,4 +116,8 @@ cluster_remover = EmrTerminateJobFlowOperator(
     dag=dag
 )
 
-cluster_creator >> step_adder >> step_checker >> cluster_remover
+end_operator = DummyOperator(task_id='Stop_execution', dag=dag)
+
+start_operator >> create_datalake_bucket >> cluster_creator
+start_operator >> create_code_bucket >> upload_code >> cluster_creator
+cluster_creator >> step_adder >> step_checker >> cluster_remover >> end_operator

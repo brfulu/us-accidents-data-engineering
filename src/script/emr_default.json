@@ -1,5 +1,6 @@
 {
   "Name": "spark-emr-cluster",
+  "LogUri": "s3://aws-logs-086546006979-us-west-2",
   "ReleaseLabel": "emr-5.28.0",
   "Applications": [
     {

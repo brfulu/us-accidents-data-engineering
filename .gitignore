@@ -18,3 +18,5 @@ dataset/*
 data/*
 
 !dataset/data.7z
+
+dl.cfg

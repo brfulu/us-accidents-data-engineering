@@ -27,6 +27,7 @@ services:
       - AIRFLOW_LOAD_EXAMPLES=no
     volumes:
       - ./dataset:/opt/bitnami/dataset
+      - ./src/script:/opt/bitnami/script
       - airflow_scheduler_data:/bitnami
       - ./src/airflow/dags:/opt/bitnami/airflow/dags
       - ./src/airflow/plugins:/opt/bitnami/airflow/plugins
@@ -41,6 +42,7 @@ services:
       - AIRFLOW_LOAD_EXAMPLES=no
     volumes:
       - ./dataset:/opt/bitnami/dataset
+      - ./src/script:/opt/bitnami/script
       - airflow_worker_data:/bitnami
       - ./src/airflow/dags:/opt/bitnami/airflow/dags
       - ./src/airflow/plugins:/opt/bitnami/airflow/plugins
@@ -59,6 +61,7 @@ services:
       - '8080:8080'
     volumes:
       - ./dataset:/opt/bitnami/dataset
+      - ./src/script:/opt/bitnami/script
       - ./src/airflow/dags:/opt/bitnami/airflow/dags
       - ./src/airflow/plugins:/opt/bitnami/airflow/plugins
 
