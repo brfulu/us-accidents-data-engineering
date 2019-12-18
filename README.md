@@ -33,7 +33,11 @@ Dimension tables
 - iso_region
 - municipality
 
-
+#### Analyze datalake with Athena
+[AWS blogpost](https://aws.amazon.com/blogs/machine-learning/run-sql-queries-from-your-sagemaker-notebooks-using-amazon-athena/)
+```
+ipython kernel install --name "my-venv" --user
+```
 
 #### Create python virtual environment
 ```
