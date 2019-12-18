@@ -77,26 +77,37 @@ run queries against it using Amazon Athena and Apache Spark.
 #### Project structure 
 ```
 us-accidents-data-engineering
-│   README.md                    # Project description
-│   docker-compose.yml           # Airflow containers description   
-│   requirements.txt             # Python dependencies
-|   dag.png                      # Pipeline DAG image
-│   
-└───airflow                      # Airflow home
-|   |               
-│   └───dags                     # Jupyter notebooks
-│   |   │ s3_to_redshift_dag.py  # DAG definition
-|   |   |
-|   └───plugins
-│       │  
-|       └───helpers
-|       |   | sql_queries.py     # All sql queries needed
-|       |
-|       └───operators
-|       |   | data_quality.py    # DataQualityOperator
-|       |   | load_dimension.py  # LoadDimensionOperator
-|       |   | load_fact.py       # LoadFactOperator
-|       |   | stage_redshift.py  # StageToRedshiftOperator
+│   README.md                            # Project description
+│   docker-compose.yml                   # Airflow containers description   
+│   requirements.txt                     # Python dependencies
+│   dl.cfg                               # Config file
+|
+└───src
+    └───airflow                          # Airflow home
+    |   |               
+    |   └───dags                         # DAG definitions
+    |   |   │ datalake_etl_dag.py        # Optimized datalake ETL DAG
+    |   |   | load_raw_datalake_dag.py   # Raw datalake DAG
+    |   |
+    |   └───plugins
+    |       │  
+    |       └───operators                # Custom operators
+    |           | create_s3_bucket.py    # CreateS3BucketOperator
+    |           | upload_files_to_s3.py  # UploadFilesToS3Operator
+    |
+    └───demo                             # Demo files for analytics
+    |   | datalake_athena.ipynb          # Run SQL queries with Athena
+    |   | datalake_spark.ipynb           # Run queries with Spark
+    |
+    └───helper                           # Helper files
+    |   | emr_default.json               # EMR cluster config
+    |
+    └───script                           # Airflow home
+        | accident_etl.py                # DataQualityOperator
+        | airport_etl.py                 # DataQualityOperator   
+        | city_etl.py                    # DataQualityOperator   
+        | etl.py                         # DataQualityOperator   
+        | split_data.py                  # DataQualityOperator   
 ```
 
 #### Step 1: Clone repository to local machine
@@ -180,7 +191,7 @@ ipython kernel install --name "my-venv" --user
 2. The pipelines would be run on a daily basis by 7 am every day.
     - We can schedule our Airflow pipelines so that they follow this pattern.
     - Airflow will store useful statistics regarding job status and we can easily spot faults in the pipeline.
-    
+   
 3. The database needed to be accessed by 100+ people.
     - We don't have to worry about the underlying infrastructure because Athena is serverless.
     - The thing that we have to consider is the Service limits for Amazon Athena. Currently the limit for 
