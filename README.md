@@ -55,14 +55,13 @@ Fact table
     - airport_code
     - city_id
     - temperature: Shows the temperature (in Fahrenheit).
-
+    
 Dimension tables
 1. cities
     - city_id
     - city
     - state_code
     - total_population
-
 2. airports
     - airport_code
     - type
@@ -167,3 +166,23 @@ Please refer to the following blogpost for mor detailed instructions.
 ```
 ipython kernel install --name "my-venv" --user
 ```
+
+#### Addressing Other Scenarios
+1. The data was increased by 100x
+    - If our data jumps from the size of 1 GB to the size of 100 GB, then the main bottleneck would probably be our
+    our Airflow container. Currently it is running on a single container on our local machine. In a production system, 
+    Airflow would be running on a cluster of machines likely coordinated with Kubernetes.
+    - Regarding the ETL job, it is currently running on 4 EMR worker instances, the only change would be to increase the
+    worker instances count if we are not satisfied with the execution time.
+    - The optimized data lake would not require significant changes since we have a flexible schema and S3 is meant for 
+    storing big data.
+
+2. The pipelines would be run on a daily basis by 7 am every day.
+    - We can schedule our Airflow pipelines so that they follow this pattern.
+    - Airflow will store useful statistics regarding job status and we can easily spot faults in the pipeline.
+    
+3. The database needed to be accessed by 100+ people.
+    - We don't have to worry about the underlying infrastructure because Athena is serverless.
+    - The thing that we have to consider is the Service limits for Amazon Athena. Currently the limit for 
+    StartQueryExecution API call is 20 per second. This means that if 100 people are using Athena everyone will have 
+    their query started within 5 seconds, which sounds like a reasonable limit.
