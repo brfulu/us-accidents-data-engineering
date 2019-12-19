@@ -12,7 +12,7 @@ raw_datalake_bucket_name = 'fulu-raw-datalake'
 
 default_args = {
     'owner': 'brfulu',
-    'start_date': datetime(2019, 1, 12),
+    'start_date': datetime(2019, 10, 25),
     'depends_on_past': False,
     'retries': 1,
     'retry_delay': 300,
@@ -22,7 +22,7 @@ default_args = {
 dag = DAG('raw_datalake_dag',
           default_args=default_args,
           description='Load data into raw S3 datalake.',
-          schedule_interval='@hourly',
+          schedule_interval='@monthly',
           catchup=False
           )
 

@@ -196,7 +196,7 @@ python -m script.split_data
 
 #### Step 5: Start Airflow Container
 ```
-docker-compose.yml
+docker-compose up
 ```
 
 #### Step 7: Open Airflow UI
@@ -219,7 +219,8 @@ Password: password
 - Conn Type: Enter Amazon Web Services.
 - Login: Enter your Access key ID from the IAM User credentials.
 - Password: Enter your Secret access key from the IAM User credentials.
-![aws_credentials](https://video.udacity-data.com/topher/2019/February/5c5aaefe_connection-aws-credentials/connection-aws-credentials.png)
+- Extra: Add the default region name. { "region_name": "eu-west-1" }
+![aws_credentials](images/aws-credentials.png)
 Click save to confirm.
 
 #### Step 7: Change default EMR config in Airflow
@@ -229,12 +230,20 @@ Click save to confirm.
 4. Click save
 
 #### Step 8: Start raw_datalake DAG
+In the navigation bar of the Airflow UI click on 'DAGs', then turn ON the 'raw_datalake_dag'.
+The DAG will start automatically.
+
 This pipeline creates the S3 bucket for our raw data lake and uploads the files from local machine.
-Wait until the pipeline has successfully completed.
+Wait until the pipeline has successfully completed (it should take around 15-20 minutes).
 
 #### Step 9: Start optimized datalake ETL DAG
+In the navigation bar of the Airflow UI click on 'DAGs', then turn ON the 'accidents_datalake_dag'.
+The DAG will start automatically.
+
 This pipeline extracts the data from our raw data lake, transforms is using Spark on an EMR cluster and saves it in 
 way that is optimizing our query efficiency.
+Wait until the pipeline has successfully completed (it should take around 15 minutes).
+
 
 #### Step 10: Analyze datalake with Athena
 Please refer to the following blogpost for mor detailed instructions.

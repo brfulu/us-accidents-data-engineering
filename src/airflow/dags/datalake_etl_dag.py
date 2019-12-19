@@ -15,9 +15,9 @@ accidents_datalake_bucket_name = 'fulu-accidents-datalake'
 
 default_args = {
     'owner': 'brfulu',
-    'start_date': datetime(2019, 1, 12),
+    'start_date': datetime(2019, 10, 25),
     'depends_on_past': False,
-    'retries': 0,
+    'retries': 1,
     'retry_delay': 300,
     'email_on_retry': False
 }
@@ -84,7 +84,7 @@ JOB_FLOW_OVERRIDES = {
 dag = DAG('accidents_datalake_etl_dag',
           default_args=default_args,
           description='Extract transform and load data to S3 datalake.',
-          schedule_interval='@yearly',
+          schedule_interval='@monthly',
           catchup=False
           )
 
