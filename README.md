@@ -22,6 +22,17 @@ The main goal of this project is to build an end to end data pipeline which is c
 We want to clean, transform and load the data to our optimized data lake on S3.
 The data lake will consist of logical tables partitioned by certain columns to optimize query latency.
     
+#### Technologies
+We are going to store our data lake on Amazon S3, which is is an object storage service that offers industry-leading scalability, data availability, security, and performance.
+S3 is a perfect places for storing our data partitioned and grouped in files. It has low cost and a lot of flexibility.
+
+For our ETL process we are using Apache Spark running on an EMR cluster on AWS. Sprak provides great performance because it 
+stores the data in-memory shared across the cluster. 
+
+Finally, to orchestrate everything, we are going to build a data pipeline using Apache Airflow. Airflow provides an intuitive
+UI where we can track the progress and bottlenecks of our pipelines.
+    
+    
 ## Explore Data Quality
 First we need to explore the data to identify data quality issues, like missing values, duplicate data, etc.
 
@@ -45,6 +56,7 @@ For this project we are going to construct 2 data lakes:
     - This is what we are using for analytics. The data is prepared, compressed and paritioned by certain  columns to 
     allow for fast query times.
     - We are consturcting a star schema with 1 fact table and multiple dimension tables.
+
 #### Optimized Datalake schema
 Fact table
 1. accidents
