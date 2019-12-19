@@ -99,6 +99,16 @@ Dimension tables
     - weather_condition_id; int; identifier; Primary Key
     - condition; string; shows the weather condition (rain, snow, thunderstorm, fog, etc.)
 
+#### Data pipelines
+Our data pipelines consist of two DAG-s.
+
+1. The first DAG is responsible for creating the raw data lake and uploading the raw data.
+![raw-datalake-dag](images/raw-datalake-dag.png)
+2. The second DAG is responsible for the ETL process and creating the optimized data lake.
+![optimized-datalake-dag](images/optimized-datalake-dag.png)
+
+
+
 ## Getting started
 Now we are going to follow steps from decompressing the original datasets to creating an optimized data lake and 
 run queries against it using Amazon Athena and Apache Spark.
@@ -120,15 +130,6 @@ Example use cases:
     a fast database like DynamoDB and then retrieve results for client applications.
     In our example we could aggregate the number of accidents by the nearest airport or city and then we could build an 
     application which will show the customers traffic blocks near there city or near the airport they are supposed to go to.
-
-#### Data pipelines
-Our data pipelines consist of two DAG-s.
-
-1. The first DAG is responsible for creating the raw data lake and uploading the raw data.
-![raw-datalake-dag](images/raw-datalake-dag.png)
-2. The second DAG is responsible for the ETL process and creating the optimized data lake.
-![optimized-datalake-dag](images/optimized-datalake-dag.png)
-
 
 #### Project structure 
 ```
