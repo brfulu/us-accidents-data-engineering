@@ -35,12 +35,10 @@ def process_accident_data(spark, input_data, output_data):
     # extract weather_conditions table
     weather_conditions_table = df.select(
         F.monotonically_increasing_id().alias('weather_condition_id'),
-        F.col('Weather_Timestamp').alias('Weather_Timestamp'),
-        F.col('weather_condition_datetime').alias('datetime'),
         F.col('Weather_Condition').alias('condition')
     )
 
-    # weather_conditions_table = weather_conditions_table.dropDuplicates(subset=['condition'])
+    weather_conditions_table = weather_conditions_table.dropDuplicates(subset=['condition'])
 
     # save weather_conditions table
     weather_conditions_table.write.parquet(os.path.join(output_data, 'weather_conditions'), 'overwrite')
@@ -53,11 +51,12 @@ def process_accident_data(spark, input_data, output_data):
     airport_df = spark.read.parquet(os.path.join(output_data, 'airports/state=*/*.parquet'))
     print('airport_count = ', airport_df.count())
 
-    joined_df = df.join(city_df, (df.City == city_df.city_name) & (df.State == city_df.state_code), how='left')
+    joined_df = df.join(city_df, (df.City == city_df.city_name) & (df.State == city_df.state_code), how='inner')
     print('joined1_count = ', joined_df.count())
     joined_df = joined_df.join(airport_df, 'airport_code', how='left')
     print('joined2_count = ', joined_df.count())
-    joined_df = joined_df.join(weather_conditions_table, 'Weather_Timestamp', how='left')
+    joined_df = joined_df.join(weather_conditions_table,
+                               joined_df.Weather_Condition == weather_conditions_table.condition, how='left')
     print('joined3_count = ', joined_df.count())
 
     joined_df = joined_df.withColumn('datetime', F.to_date(F.col('Start_Time')))
@@ -76,6 +75,7 @@ def process_accident_data(spark, input_data, output_data):
         F.col('Precipitation(in)').alias('precipitation'),
         F.col('Airport_Code').alias('airport_code'),
         'city_id',
+        'weather_condition_id'
     )
 
     accident_table.show(5)

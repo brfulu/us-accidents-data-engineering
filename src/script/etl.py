@@ -15,24 +15,28 @@ def create_spark_session():
     return spark
 
 
-def process_airpot_data(spark, input_data, output_data):
+def process_airport_data(spark, input_data, output_data):
     # get filepath to airport data file
     airport_data = os.path.join(input_data, 'airport_data/*.csv')
 
     # read airport data files
     df = spark.read.csv(airport_data, header=True)
     df = df.filter(df.continent == 'NA')
+    df = df.filter(df.iso_country == 'US')
+
+    # extract 2-letter state code
+    extract_state_code = F.udf(lambda x: x[3:], StringType())
+    df = df.withColumn('state_code', extract_state_code('iso_region'))
+
     print('airport_coint = ', df.count())
 
     # extract columns to create songs table
     airport_table = df.select(
         F.col('ident').alias('airport_code'),
-        F.col('iso_country').alias('state'),
+        F.col('state_code').alias('state'),
+        'state_code',
         'type',
         'name',
-        'continent',
-        F.col('iso_country').alias('state_code'),
-        'iso_region',
         'municipality'
     )
 
@@ -70,9 +74,23 @@ def process_accident_data(spark, input_data, output_data):
 
     # extract relevant columns
     df = df['ID', 'Start_Time', 'City', 'State', 'Airport_Code', 'End_Time', 'Timezone', 'Description', 'Severity',
-            'Temperature(F)']
+            'Temperature(F)', 'Distance(mi)', 'Wind_Speed(mph)', 'Precipitation(in)',
+            'Weather_Condition', 'Weather_Timestamp']
 
     print('accident_count = ', df.count())
+
+    df = df.withColumn('weather_condition_datetime', F.to_date(F.col('Weather_Timestamp')))
+
+    # extract weather_conditions table
+    weather_conditions_table = df.select(
+        F.monotonically_increasing_id().alias('weather_condition_id'),
+        F.col('Weather_Condition').alias('condition')
+    )
+
+    weather_conditions_table = weather_conditions_table.dropDuplicates(subset=['condition'])
+
+    # save weather_conditions table
+    weather_conditions_table.write.parquet(os.path.join(output_data, 'weather_conditions'), 'overwrite')
 
     # read in song data to use for city table
     city_df = spark.read.parquet(os.path.join(output_data, 'cities/state=*/*.parquet'))
@@ -82,11 +100,13 @@ def process_accident_data(spark, input_data, output_data):
     airport_df = spark.read.parquet(os.path.join(output_data, 'airports/state=*/*.parquet'))
     print('airport_count = ', airport_df.count())
 
-    joined_df = df.join(city_df, (df.City == city_df.city_name) & (df.State == city_df.state_code), how='left')
+    joined_df = df.join(city_df, (df.City == city_df.city_name) & (df.State == city_df.state_code), how='inner')
     print('joined1_count = ', joined_df.count())
     joined_df = joined_df.join(airport_df, 'airport_code', how='left')
     print('joined2_count = ', joined_df.count())
-    # joined_df.show(5)
+    joined_df = joined_df.join(weather_conditions_table,
+                               joined_df.Weather_Condition == weather_conditions_table.condition, how='left')
+    print('joined3_count = ', joined_df.count())
 
     joined_df = joined_df.withColumn('datetime', F.to_date(F.col('Start_Time')))
 
@@ -95,21 +115,19 @@ def process_accident_data(spark, input_data, output_data):
         F.col('ID').alias('accident_id'),
         F.year('datetime').alias('year'),
         F.month('datetime').alias('month'),
-        # F.dayofmonth('datetime').alias('day'),
         'datetime',
-        F.col('City').alias('city'),
-        F.col('State').alias('state_code'),
-        F.col('State').alias('state'),
-        F.col('Airport_Code').alias('airport_code'),
-        F.col('Start_Time').alias('start_time'),
-        F.col('End_Time').alias('end_time'),
-        F.col('Timezone').alias('timezone'),
-        # F.col('Description').alias('description'),
         F.col('Severity').alias('severity'),
-        F.col('Temperature(F)').alias('temperature')
+        F.col('Distance(mi)').alias('distance'),
+        F.col('Description').alias('description'),
+        F.col('Temperature(F)').alias('temperature'),
+        F.col('Wind_Speed(mph)').alias('wind_speed'),
+        F.col('Precipitation(in)').alias('precipitation'),
+        F.col('Airport_Code').alias('airport_code'),
+        'city_id',
+        'weather_condition_id'
     )
 
-    # accident_table.show(5)
+    accident_table.show(5)
     accident_table.write.partitionBy(['year', 'month']).parquet(os.path.join(output_data, 'accidents'), 'overwrite')
 
 
@@ -131,7 +149,7 @@ def main():
 
     spark = create_spark_session()
 
-    process_airpot_data(spark, input_data, output_data)
+    process_airport_data(spark, input_data, output_data)
     process_city_data(spark, input_data, output_data)
     process_accident_data(spark, input_data, output_data)
 

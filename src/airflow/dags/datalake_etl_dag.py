@@ -68,6 +68,15 @@ SPARK_ETL_STEPS = [
             'Args': ['spark-submit', '/home/hadoop/script/accident_etl.py', 's3a://' + raw_datalake_bucket_name,
                      's3a://' + accidents_datalake_bucket_name]
         }
+    },
+    {
+        'Name': 'Run Spark',
+        'ActionOnFailure': 'CONTINUE',
+        'HadoopJarStep': {
+            'Jar': 'command-runner.jar',
+            'Args': ['spark-submit', '/home/hadoop/script/check_data_quality.py',
+                     's3a://' + accidents_datalake_bucket_name]
+        }
     }
 ]
 
@@ -143,6 +152,14 @@ check_accident_processing = EmrStepSensor(
     dag=dag
 )
 
+check_data_quality_check = EmrStepSensor(
+    task_id='Watch_data_quality_check_step',
+    job_flow_id="{{ task_instance.xcom_pull('Create_EMR_cluster', key='return_value') }}",
+    step_id="{{ task_instance.xcom_pull(task_ids='Add_jobflow_steps', key='return_value')[5] }}",
+    aws_conn_id='aws_credentials',
+    dag=dag
+)
+
 delete_cluster = EmrTerminateJobFlowOperator(
     task_id='Delete_EMR_cluster',
     job_flow_id="{{ task_instance.xcom_pull(task_ids='Create_EMR_cluster', key='return_value') }}",
@@ -155,7 +172,7 @@ end_operator = DummyOperator(task_id='Stop_execution', dag=dag)
 start_operator >> create_datalake_bucket >> create_cluster
 start_operator >> create_code_bucket >> upload_etl_code >> create_cluster
 create_cluster >> add_jobflow_steps
-add_jobflow_steps >> check_city_processing >> delete_cluster
-add_jobflow_steps >> check_airport_processing >> delete_cluster
-add_jobflow_steps >> check_accident_processing >> delete_cluster
-delete_cluster >> end_operator
+add_jobflow_steps >> check_city_processing >> check_data_quality_check
+add_jobflow_steps >> check_airport_processing >> check_data_quality_check
+add_jobflow_steps >> check_accident_processing >> check_data_quality_check
+check_data_quality_check >> delete_cluster >> end_operator

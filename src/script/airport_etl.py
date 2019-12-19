@@ -15,7 +15,7 @@ def create_spark_session():
     return spark
 
 
-def process_airpot_data(spark, input_data, output_data):
+def process_airport_data(spark, input_data, output_data):
     # get filepath to airport data file
     airport_data = os.path.join(input_data, 'airport_data/*.csv')
 
@@ -61,7 +61,7 @@ def main():
 
     spark = create_spark_session()
 
-    process_airpot_data(spark, input_data, output_data)
+    process_airport_data(spark, input_data, output_data)
 
 
 if __name__ == "__main__":
