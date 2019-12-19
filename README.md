@@ -103,6 +103,10 @@ Dimension tables
 Now we are going to follow steps from decompressing the original datasets to creating an optimized data lake and 
 run queries against it using Amazon Athena and Apache Spark.
 
+The prerequisite for executing the following steps is to configure aws-cli and aws credentials.
+
+[Quickly Configuring the AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html)
+
 #### Data model use cases
 The optimized data lake we are building on S3 is going to be a multipurpose data source. The whole idea behind data lakes 
 is that they provide us with flexibility in the number of different ways we are going to use the data. 
@@ -225,6 +229,12 @@ way that is optimizing our query efficiency.
 #### Step 10: Analyze datalake with Athena
 Please refer to the following blogpost for mor detailed instructions.
 [AWS blogpost](https://aws.amazon.com/blogs/machine-learning/run-sql-queries-from-your-sagemaker-notebooks-using-amazon-athena/)
+
+Start jupyter server
+```
+jupyter notebook
+```
+Go to http://localhost:8888 and open src/demo/datalake_athena.ipynb notebook. 
 
 ## Addressing Other Scenarios
 1. The data was increased by 100x
