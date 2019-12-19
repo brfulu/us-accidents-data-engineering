@@ -135,22 +135,22 @@ us-accidents-data-engineering
     |   └───plugins
     |       │  
     |       └───operators                # Custom operators
+    |           | check_s3_file_count.py # UploadFilesToS3Operator
     |           | create_s3_bucket.py    # CreateS3BucketOperator
     |           | upload_files_to_s3.py  # UploadFilesToS3Operator
     |
     └───demo                             # Demo files for analytics
-    |   | datalake_athena.ipynb          # Run SQL queries with Athena
-    |   | datalake_spark.ipynb           # Run queries with Spark
+    |   | datalake_athena.ipynb          # Run SQL analytics queries with Athena
     |
     └───helper                           # Helper files
     |   | emr_default.json               # EMR cluster config
     |
     └───script                           # Airflow home
-        | accident_etl.py                # DataQualityOperator
-        | airport_etl.py                 # DataQualityOperator   
-        | city_etl.py                    # DataQualityOperator   
-        | etl.py                         # DataQualityOperator   
-        | split_data.py                  # DataQualityOperator   
+        | accident_etl.py                # Accidents data ETL
+        | airport_etl.py                 # Airports data ETL   
+        | city_etl.py                    # Cities data ETL   
+        | etl.py                         # All in one ETL   
+        | split_data.py                  # Split data into smaller files    
 ```
 
 #### Step 1: Clone repository to local machine

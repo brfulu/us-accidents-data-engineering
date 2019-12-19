@@ -34,7 +34,7 @@
         "Market": "ON_DEMAND",
         "InstanceRole": "CORE",
         "InstanceType": "m5.xlarge",
-        "InstanceCount": 3
+        "InstanceCount": 4
       }
     ],
     "KeepJobFlowAliveWhenNoSteps": false,
