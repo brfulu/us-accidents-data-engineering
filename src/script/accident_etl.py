@@ -25,9 +25,25 @@ def process_accident_data(spark, input_data, output_data):
 
     # extract relevant columns
     df = df['ID', 'Start_Time', 'City', 'State', 'Airport_Code', 'End_Time', 'Timezone', 'Description', 'Severity',
-            'Temperature(F)']
+            'Temperature(F)', 'Distance(mi)', 'Wind_Speed(mph)', 'Precipitation(in)',
+            'Weather_Condition', 'Weather_Timestamp']
 
     print('accident_count = ', df.count())
+
+    df = df.withColumn('weather_condition_datetime', F.to_date(F.col('Weather_Timestamp')))
+
+    # extract weather_conditions table
+    weather_conditions_table = df.select(
+        F.monotonically_increasing_id().alias('weather_condition_id'),
+        F.col('Weather_Timestamp').alias('Weather_Timestamp'),
+        F.col('weather_condition_datetime').alias('datetime'),
+        F.col('Weather_Condition').alias('condition')
+    )
+
+    # weather_conditions_table = weather_conditions_table.dropDuplicates(subset=['condition'])
+
+    # save weather_conditions table
+    weather_conditions_table.write.parquet(os.path.join(output_data, 'weather_conditions'), 'overwrite')
 
     # read in song data to use for city table
     city_df = spark.read.parquet(os.path.join(output_data, 'cities/state=*/*.parquet'))
@@ -41,7 +57,8 @@ def process_accident_data(spark, input_data, output_data):
     print('joined1_count = ', joined_df.count())
     joined_df = joined_df.join(airport_df, 'airport_code', how='left')
     print('joined2_count = ', joined_df.count())
-    # joined_df.show(5)
+    joined_df = joined_df.join(weather_conditions_table, 'Weather_Timestamp', how='left')
+    print('joined3_count = ', joined_df.count())
 
     joined_df = joined_df.withColumn('datetime', F.to_date(F.col('Start_Time')))
 
@@ -50,21 +67,18 @@ def process_accident_data(spark, input_data, output_data):
         F.col('ID').alias('accident_id'),
         F.year('datetime').alias('year'),
         F.month('datetime').alias('month'),
-        # F.dayofmonth('datetime').alias('day'),
         'datetime',
-        F.col('City').alias('city'),
-        F.col('State').alias('state_code'),
-        F.col('State').alias('state'),
-        F.col('Airport_Code').alias('airport_code'),
-        F.col('Start_Time').alias('start_time'),
-        F.col('End_Time').alias('end_time'),
-        F.col('Timezone').alias('timezone'),
-        # F.col('Description').alias('description'),
         F.col('Severity').alias('severity'),
-        F.col('Temperature(F)').alias('temperature')
+        F.col('Distance(mi)').alias('distance'),
+        F.col('Description').alias('description'),
+        F.col('Temperature(F)').alias('temperature'),
+        F.col('Wind_Speed(mph)').alias('wind_speed'),
+        F.col('Precipitation(in)').alias('precipitation'),
+        F.col('Airport_Code').alias('airport_code'),
+        'city_id',
     )
 
-    # accident_table.show(5)
+    accident_table.show(5)
     accident_table.write.partitionBy(['year', 'month']).parquet(os.path.join(output_data, 'accidents'), 'overwrite')
 
 

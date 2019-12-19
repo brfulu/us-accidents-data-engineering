@@ -4,7 +4,7 @@ import os
 import sys
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
-from pyspark.sql.types import DateType
+from pyspark.sql.types import DateType, StringType
 
 
 def create_spark_session():
@@ -22,17 +22,21 @@ def process_airpot_data(spark, input_data, output_data):
     # read airport data files
     df = spark.read.csv(airport_data, header=True)
     df = df.filter(df.continent == 'NA')
+    df = df.filter(df.iso_country == 'US')
+
+    # extract 2-letter state code
+    extract_state_code = F.udf(lambda x: x[3:], StringType())
+    df = df.withColumn('state_code', extract_state_code('iso_region'))
+
     print('airport_coint = ', df.count())
 
     # extract columns to create songs table
     airport_table = df.select(
         F.col('ident').alias('airport_code'),
-        F.col('iso_country').alias('state'),
+        F.col('state_code').alias('state'),
+        'state_code',
         'type',
         'name',
-        'continent',
-        F.col('iso_country').alias('state_code'),
-        'iso_region',
         'municipality'
     )
 

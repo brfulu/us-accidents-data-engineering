@@ -72,26 +72,33 @@ For this project we are going to construct 2 data lakes:
 Fact table
 1. accidents
     - accident_id; string; unique identifier of the accident record; Primary Key
+    - datetime; datetime; shows start time of the accident in local time zone
     - severity; int; shows the severity of the accident, a number between 1 and 4
     - distance; int; the length of the road extent affected by the accident
     - description; string; shows natural language description of the accident
-    - temperature: Shows the temperature (in Fahrenheit).
+    - temperature: Shows the temperature (in Fahrenheit)
+    - wind_speed; int; shows wind speed (in miles per hour)
+    - precipitation; int; shows precipitation amount in inches, if there is any.
     - airport_code; string; 4-character airport code; Foreign Key
     - city_id; int; city identifier; Foreign Key
+    - weather_condition_id; int; identifier; Foreign Key
     
 Dimension tables
 1. cities
     - city_id; int; unique id of city; Primary Key, auto-incremented
-    - city; string; name of the city
+    - city_name; string; name of the city
     - state_code; string; 2-letter code of the state
     - total_population; int: total population of the city
 2. airports
     - airport_code; string; 4-character unique airport code; Primary Key
     - type; string; type of airport (small, medium, large)
     - name; string; name of the airport
-    - iso_country; string; the country airport belongs to (we want 'US')
-    - iso_region; string; the state airport belongs to, 2-letter code
+    - state_code; string; the state airport belongs to, 2-letter code
     - municipality; string; municipality the airport belongs to
+3. weather_conditions
+    - weather_condition_id; int; identifier; Primary Key
+    - timestamp; timestamp; Shows the time-stamp of weather observation record (in local time
+    - condition; string; shows the weather condition (rain, snow, thunderstorm, fog, etc.)
 
 ## Getting started
 Now we are going to follow steps from decompressing the original datasets to creating an optimized data lake and 
