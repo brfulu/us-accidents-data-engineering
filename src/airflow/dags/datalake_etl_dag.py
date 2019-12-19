@@ -9,9 +9,6 @@ from airflow.contrib.operators.emr_terminate_job_flow_operator import EmrTermina
 from airflow.contrib.sensors.emr_step_sensor import EmrStepSensor
 from operators import CreateS3BucketOperator, UploadFilesToS3Operator
 
-# config = configparser.ConfigParser()
-# config.read('../dl.cfg')
-
 spark_script_bucket_name = 'fulu-spark-script'
 raw_datalake_bucket_name = 'fulu-raw-datalake'
 accidents_datalake_bucket_name = 'fulu-accidents-datalake'

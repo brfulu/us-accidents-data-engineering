@@ -16,6 +16,15 @@ def create_spark_session():
 
 
 def process_airport_data(spark, input_data, output_data):
+    """Process airport data
+
+    Extract transform and load the airport dataset into an optimized data lake on S3.
+
+    :param spark: spark session object
+    :param input_data: string; input_data path
+    :param output_data: string; output_data path
+    """
+
     # get filepath to airport data file
     airport_data = os.path.join(input_data, 'airport_data/*.csv')
 

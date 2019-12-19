@@ -16,9 +16,17 @@ def create_spark_session():
 
 
 def process_accident_data(spark, input_data, output_data):
+    """Process accident data
+
+    Extract transform and load the accident dataset into an optimized data lake on S3.
+
+    :param spark: spark session object
+    :param input_data: string; input_data path
+    :param output_data: string; output_data path
+    """
+
     # get filepath to accident data file
     accident_data = os.path.join(input_data, 'accident_data/*.csv')
-    print(accident_data)
 
     # read accident data files
     df = spark.read.csv(accident_data, header=True)
@@ -30,6 +38,7 @@ def process_accident_data(spark, input_data, output_data):
 
     print('accident_count = ', df.count())
 
+    # convert the stirng timestamp column to date
     df = df.withColumn('weather_condition_datetime', F.to_date(F.col('Weather_Timestamp')))
 
     # extract weather_conditions table
@@ -38,6 +47,7 @@ def process_accident_data(spark, input_data, output_data):
         F.col('Weather_Condition').alias('condition')
     )
 
+    # leave only unique conditions
     weather_conditions_table = weather_conditions_table.dropDuplicates(subset=['condition'])
 
     # save weather_conditions table
@@ -45,20 +55,18 @@ def process_accident_data(spark, input_data, output_data):
 
     # read in song data to use for city table
     city_df = spark.read.parquet(os.path.join(output_data, 'cities/*.parquet'))
-    print('city_count = ', city_df.count())
 
     # read in song data to use for airport table
     airport_df = spark.read.parquet(os.path.join(output_data, 'airports/state=*/*.parquet'))
-    print('airport_count = ', airport_df.count())
 
     joined_df = df.join(city_df, (df.City == city_df.city_name) & (df.State == city_df.state_code), how='inner')
-    print('joined1_count = ', joined_df.count())
     joined_df = joined_df.join(airport_df, 'airport_code', how='left')
-    print('joined2_count = ', joined_df.count())
     joined_df = joined_df.join(weather_conditions_table,
                                joined_df.Weather_Condition == weather_conditions_table.condition, how='left')
-    print('joined3_count = ', joined_df.count())
 
+    print('joined_df_count = ', joined_df.count())
+
+    # convert string timestamp to datetime
     joined_df = joined_df.withColumn('datetime', F.to_date(F.col('Start_Time')))
 
     # extract columns to create accidents table

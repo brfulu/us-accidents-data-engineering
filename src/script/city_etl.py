@@ -16,6 +16,15 @@ def create_spark_session():
 
 
 def process_city_data(spark, input_data, output_data):
+    """Process city data
+
+    Extract transform and load the city dataset into an optimized data lake on S3.
+
+    :param spark: spark session object
+    :param input_data: string; input_data path
+    :param output_data: string; output_data path
+    """
+
     # get filepath to city data file
     city_data = os.path.join(input_data, 'city_data/*.csv')
 
