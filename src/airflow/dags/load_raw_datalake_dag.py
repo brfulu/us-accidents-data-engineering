@@ -58,7 +58,7 @@ upload_accident_data = UploadFilesToS3Operator(
 check_data_quality = CheckS3FileCount(
     task_id='Check_data_quality',
     bucket_name=raw_datalake_bucket_name,
-    expected_count=3,
+    expected_count=10,
     dag=dag
 )
 
