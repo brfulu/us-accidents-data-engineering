@@ -36,6 +36,16 @@ UI where we can track the progress and bottlenecks of our pipelines.
 ## Explore Data Quality
 First we need to explore the data to identify data quality issues, like missing values, duplicate data, etc.
 
+Regarding tha City Demographics dataset, the data is containing duplicate rows regarding the pair (city, state). In our
+case we are more interested in the total population of the place so we are going to drop those duplicates.
+
+The US Accidents dataset is of good quality, but it contains a lot of columns (50). In our case we are going to use only a
+subset of these columns so we are going to extract them in the ETL process.
+Despite only needing a subset of the columns for the optimized data lake, we are going to upload all columns into the raw data lake,
+because in the future we may decide to enrich our data model and add more columns, so it is a good idea to store the raw data in S3.
+
+The Airports dataset contains some missing values, but the columns that we are interested in such as airport_code, type and name are
+of good quality.
 
 ## Data Model
 As mentioned in the introduction, the data will be modeled in a data lake on S3.
@@ -154,6 +164,14 @@ python -m script.split_data
 docker-compose.yml
 ```
 
+#### Step 7: Open Airflow UI
+Visit the path http://localhost:8080 in your browser.
+Login to Airflow.
+
+Username: user
+
+Password: password 
+
 #### Step 6: Connect Airflow to AWS
 
 1. Click on the Admin tab and select Connections.
@@ -176,11 +194,11 @@ Click save to confirm.
 4. Click save
 
 #### Step 8: Start raw_datalake DAG
-This pipeline creates the S3 bucket for our raw datalake and uploads the files from local machine.
+This pipeline creates the S3 bucket for our raw data lake and uploads the files from local machine.
 Wait until the pipeline has successfully completed.
 
 #### Step 9: Start optimized datalake ETL DAG
-This pipeline extracts the data from our raw datalake, transforms is using Spark on an EMR cluster and saves it in 
+This pipeline extracts the data from our raw data lake, transforms is using Spark on an EMR cluster and saves it in 
 way that is optimizing our query efficiency.
 
 #### Step 10: Analyze datalake with Athena

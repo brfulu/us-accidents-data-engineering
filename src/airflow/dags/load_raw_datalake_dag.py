@@ -6,10 +6,7 @@ from airflow.contrib.hooks.aws_hook import AwsHook
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.postgres_operator import PostgresOperator
-from operators import CreateS3BucketOperator, UploadFilesToS3Operator
-
-# config = configparser.ConfigParser()
-# config.read('../dl.cfg')
+from operators import CreateS3BucketOperator, UploadFilesToS3Operator, CheckS3FileCount
 
 raw_datalake_bucket_name = 'fulu-raw-datalake'
 
@@ -58,6 +55,13 @@ upload_accident_data = UploadFilesToS3Operator(
     dag=dag
 )
 
+check_data_quality = CheckS3FileCount(
+    task_id='Check_data_quality',
+    bucket_name=raw_datalake_bucket_name,
+    expected_count=3,
+    dag=dag
+)
+
 end_operator = DummyOperator(task_id='Stop_execution', dag=dag)
 
 start_operator >> create_raw_datalake
@@ -66,6 +70,8 @@ create_raw_datalake >> upload_accident_data
 create_raw_datalake >> upload_airport_data
 create_raw_datalake >> upload_city_data
 
-upload_accident_data >> end_operator
-upload_airport_data >> end_operator
-upload_city_data >> end_operator
+upload_accident_data >> check_data_quality
+upload_airport_data >> check_data_quality
+upload_city_data >> check_data_quality
+
+check_data_quality >> end_operator
