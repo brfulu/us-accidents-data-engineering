@@ -97,12 +97,25 @@ Dimension tables
     - municipality; string; municipality the airport belongs to
 3. weather_conditions
     - weather_condition_id; int; identifier; Primary Key
-    - timestamp; timestamp; Shows the time-stamp of weather observation record (in local time
     - condition; string; shows the weather condition (rain, snow, thunderstorm, fog, etc.)
 
 ## Getting started
 Now we are going to follow steps from decompressing the original datasets to creating an optimized data lake and 
 run queries against it using Amazon Athena and Apache Spark.
+
+#### Data model use cases
+The optimized data lake we are building on S3 is going to be a multipurpose data source. The whole idea behind data lakes 
+is that they provide us with flexibility in the number of different ways we are going to use the data. 
+
+Example use cases:
+- Directly run analytics queries (SQL) against the data lake by using Amazon Athena or Apache Spark.
+    - In this manner we can find out useful information like: 'What was the total number of accidents in a specific city?',
+    "The number of accidents grouped by weather condition (rain, snow, clear)".
+- Another use case could be to support a live dashboard for a website or mobile app via an intermediate database like DynamoDB.
+    - Every time our data lake gets updated we could also run some predefined aggregations which will store the results in 
+    a fast database like DynamoDB and then retrieve results for client applications.
+    In our example we could aggregate the number of accidents by the nearest airport or city and then we could build an 
+    application which will show the customers traffic blocks near there city or near the airport they are supposed to go to.
 
 #### Project structure 
 ```
@@ -212,11 +225,8 @@ way that is optimizing our query efficiency.
 #### Step 10: Analyze datalake with Athena
 Please refer to the following blogpost for mor detailed instructions.
 [AWS blogpost](https://aws.amazon.com/blogs/machine-learning/run-sql-queries-from-your-sagemaker-notebooks-using-amazon-athena/)
-```
-ipython kernel install --name "my-venv" --user
-```
 
-#### Addressing Other Scenarios
+## Addressing Other Scenarios
 1. The data was increased by 100x
     - If our data jumps from the size of 1 GB to the size of 100 GB, then the main bottleneck would probably be our
     our Airflow container. Currently it is running on a single container on our local machine. In a production system, 

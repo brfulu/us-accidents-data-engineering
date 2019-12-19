@@ -51,7 +51,7 @@ def split_csv(source_filepath, dest_folder, split_file_prefix, records_per_file)
 
 
 def main():
-    split_csv('../dataset/us_accidents.csv', '../dataset/accident_data/', 'us_accidents_part', 50000)
+    split_csv('../dataset/us_accidents.csv', '../dataset/accident_data/', 'us_accidents_part', 40000)
     split_csv('../dataset/airport_codes.csv', '../dataset/airport_data/', 'airport_codes_part', 10000)
     split_csv('../dataset/us_cities_demographics.csv', '../dataset/city_data/', 'us_cities_demographics_part', 1000)
 

@@ -44,7 +44,7 @@ def process_accident_data(spark, input_data, output_data):
     weather_conditions_table.write.parquet(os.path.join(output_data, 'weather_conditions'), 'overwrite')
 
     # read in song data to use for city table
-    city_df = spark.read.parquet(os.path.join(output_data, 'cities/state=*/*.parquet'))
+    city_df = spark.read.parquet(os.path.join(output_data, 'cities/*.parquet'))
     print('city_count = ', city_df.count())
 
     # read in song data to use for airport table

@@ -33,7 +33,7 @@ def process_city_data(spark, input_data, output_data):
         F.col('Total Population').alias('total_population')
     )
 
-    city_table.write.partitionBy('state').parquet(os.path.join(output_data, 'cities'), 'overwrite')
+    city_table.write.parquet(os.path.join(output_data, 'cities'), 'overwrite')
 
 
 def main():

@@ -18,22 +18,22 @@ def create_spark_session():
 def check_airport_data(spark, datalake_bucket):
     airport_df = spark.read.parquet(os.path.join(datalake_bucket, 'airports/state=*/*.parquet'))
 
-    if len(airport_df) == 0:
+    if airport_df.count() == 0:
         raise AssertionError('Airports table is empty.')
 
 
 def check_city_data(spark, datalake_bucket):
-    city_df = spark.read.parquet(os.path.join(datalake_bucket, 'cities/state=*/*.parquet'))
+    city_df = spark.read.parquet(os.path.join(datalake_bucket, 'cities/*.parquet'))
 
-    if len(city_df) == 0:
+    if city_df.count() == 0:
         raise AssertionError('Cities table is empty.')
 
 
 def check_accident_data(spark, datalake_bucket):
-    accident_df = spark.read.parquet(os.path.join(datalake_bucket, 'cities/year=*/month=*/*.parquet'))
+    accident_df = spark.read.parquet(os.path.join(datalake_bucket, 'accidents/year=*/month=*/*.parquet'))
 
-    if len(accident_df) == 0:
-        raise AssertionError('Cities table is empty.')
+    if accident_df.count() == 0:
+        raise AssertionError('Accidents table is empty.')
 
 
 def main():

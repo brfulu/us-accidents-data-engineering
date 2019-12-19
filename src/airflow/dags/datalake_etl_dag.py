@@ -43,7 +43,7 @@ SPARK_ETL_STEPS = [
         }
     },
     {
-        'Name': 'Run Spark',
+        'Name': 'Airports - ETL',
         'ActionOnFailure': 'CONTINUE',
         'HadoopJarStep': {
             'Jar': 'command-runner.jar',
@@ -52,7 +52,7 @@ SPARK_ETL_STEPS = [
         }
     },
     {
-        'Name': 'Run Spark',
+        'Name': 'Cities - ETL',
         'ActionOnFailure': 'CONTINUE',
         'HadoopJarStep': {
             'Jar': 'command-runner.jar',
@@ -61,7 +61,7 @@ SPARK_ETL_STEPS = [
         }
     },
     {
-        'Name': 'Run Spark',
+        'Name': 'Accidents - ETL',
         'ActionOnFailure': 'CONTINUE',
         'HadoopJarStep': {
             'Jar': 'command-runner.jar',
@@ -70,7 +70,7 @@ SPARK_ETL_STEPS = [
         }
     },
     {
-        'Name': 'Run Spark',
+        'Name': 'Check data quality',
         'ActionOnFailure': 'CONTINUE',
         'HadoopJarStep': {
             'Jar': 'command-runner.jar',
@@ -131,7 +131,7 @@ add_jobflow_steps = EmrAddStepsOperator(
 check_city_processing = EmrStepSensor(
     task_id='Watch_city_processing_step',
     job_flow_id="{{ task_instance.xcom_pull('Create_EMR_cluster', key='return_value') }}",
-    step_id="{{ task_instance.xcom_pull(task_ids='Add_jobflow_steps', key='return_value')[2] }}",
+    step_id="{{ task_instance.xcom_pull(task_ids='Add_jobflow_steps', key='return_value')[3] }}",
     aws_conn_id='aws_credentials',
     dag=dag
 )
@@ -139,7 +139,7 @@ check_city_processing = EmrStepSensor(
 check_airport_processing = EmrStepSensor(
     task_id='Watch_airport_processing_step',
     job_flow_id="{{ task_instance.xcom_pull('Create_EMR_cluster', key='return_value') }}",
-    step_id="{{ task_instance.xcom_pull(task_ids='Add_jobflow_steps', key='return_value')[3] }}",
+    step_id="{{ task_instance.xcom_pull(task_ids='Add_jobflow_steps', key='return_value')[2] }}",
     aws_conn_id='aws_credentials',
     dag=dag
 )

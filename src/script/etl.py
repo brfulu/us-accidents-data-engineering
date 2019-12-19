@@ -61,7 +61,7 @@ def process_city_data(spark, input_data, output_data):
         F.col('Total Population').alias('total_population')
     )
 
-    city_table.write.partitionBy('state').parquet(os.path.join(output_data, 'cities'), 'overwrite')
+    city_table.write.parquet(os.path.join(output_data, 'cities'), 'overwrite')
 
 
 def process_accident_data(spark, input_data, output_data):
@@ -93,7 +93,7 @@ def process_accident_data(spark, input_data, output_data):
     weather_conditions_table.write.parquet(os.path.join(output_data, 'weather_conditions'), 'overwrite')
 
     # read in song data to use for city table
-    city_df = spark.read.parquet(os.path.join(output_data, 'cities/state=*/*.parquet'))
+    city_df = spark.read.parquet(os.path.join(output_data, 'cities/*.parquet'))
     print('city_count = ', city_df.count())
 
     # read in song data to use for airport table
